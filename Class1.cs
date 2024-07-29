@@ -4,15 +4,80 @@ using Rocket.API;
 using System.IO;
 using System.Collections.Generic;
 using Rocket.Core.Logging;
+using Rocket.Unturned.Player;
+using Steamworks;
+using System.Threading.Tasks;
 
 namespace InvItemWiper
 {
     public class Class1 : RocketPlugin<Config>
     {
+        List<CSteamID> Modified = new List<CSteamID>();
         protected override void Load()
         {
             // Trigger the item removal process after the level is loaded
             if(Configuration.Instance.enabled) RemoveItemFromAllPlayers();
+            if (Configuration.Instance.Events)
+            {
+                Rocket.Unturned.U.Events.OnPlayerConnected += PC;
+                LoadModified();
+            }
+        }
+        protected override void Unload()
+        {
+            if (Configuration.Instance.Events)
+            {
+                Rocket.Unturned.U.Events.OnPlayerConnected -= PC;
+                SaveModified();
+            }
+        }
+        void PC(UnturnedPlayer player)
+        {
+            if (!Modified.Contains(player.CSteamID))
+            {
+                Items[] pi = player.Inventory.items;
+                for(int i = 0; i < pi.Length; i++)
+                {
+                    if (pi[i] == null || pi[i].items == null) continue;
+                    List<ItemJar> items = pi[i].items;
+                    for(int y = 0; y < items.Count; y++)
+                    {
+                        if (items[y] == null || items[y].item == null) continue;
+                        if(items[y].item.id == Configuration.Instance.ItemID)
+                        {
+                            //ItemManager.dropItem(items[y].item, player.Position, false, true, false);
+                            player.Inventory.removeItem(pi[i].page, pi[i].getIndex(items[y].x, items[y].y));
+                        }
+                    }
+                }
+                Modified.Add(player.CSteamID);
+                Task.Run(() => SaveModified());
+            }
+        }
+        public void LoadModified()
+        {
+            string filePath = Path.Combine(Directory, "Modified.log");
+            if (!File.Exists(filePath))
+            {
+                return;
+            }
+            string[] lines = File.ReadAllLines(filePath);
+            foreach (string line in lines)
+            {
+                Modified.Add(new CSteamID(ulong.Parse(line)));
+            }
+        }
+        public void SaveModified()
+        {
+            List<string> lines = new List<string>();
+
+            for(int i=0;i<Modified.Count;i++)
+            {
+                string line = Modified[i].m_SteamID.ToString();
+                lines.Add(line);
+            }
+
+            File.WriteAllLines(Path.Combine(Directory, "Modified.log"), lines);
         }
         private void RemoveItemFromAllPlayers()
         {
@@ -46,7 +111,8 @@ namespace InvItemWiper
             {
                 using (MemoryStream memoryStream = new MemoryStream(data))
                 using (BinaryReader reader = new BinaryReader(memoryStream))
-                using (BinaryWriter writer = new BinaryWriter(new MemoryStream()))
+                using (MemoryStream outputStream = new MemoryStream())
+                using (BinaryWriter writer = new BinaryWriter(outputStream))
                 {
                     // Deserialize the inventory data
                     // Example: Adjust the following pseudo-code based on the actual inventory structure
@@ -88,7 +154,7 @@ namespace InvItemWiper
                     }
 
                     // Get the modified data
-                    byte[] modifiedData = ((MemoryStream)writer.BaseStream).ToArray();
+                    byte[] modifiedData = outputStream.ToArray();
 
                     // Save the modified data back to the file
                     File.WriteAllBytes(inventoryFile, modifiedData);
