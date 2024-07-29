@@ -11,11 +11,15 @@ namespace InvItemWiper
     {
         public bool enabled;
         public ushort ItemID;
+        public string ServerName;
+        public string LevelName;
 
         public void LoadDefaults()
         {
             enabled = true;
             ItemID = 47580;
+            ServerName = "3";
+            LevelName = "Retrovia";
         }
     }
 }
