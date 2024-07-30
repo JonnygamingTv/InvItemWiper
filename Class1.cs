@@ -43,7 +43,7 @@ namespace InvItemWiper
                     for(int y = 0; y < items.Count; y++)
                     {
                         if (items[y] == null || items[y].item == null) continue;
-                        if(items[y].item.id == Configuration.Instance.ItemID)
+                        if(Configuration.Instance.ItemID.Contains(items[y].item.id))
                         {
                             //ItemManager.dropItem(items[y].item, player.Position, false, true, false);
                             player.Inventory.removeItem(pi[i].page, pi[i].getIndex(items[y].x, items[y].y));
@@ -134,7 +134,7 @@ namespace InvItemWiper
                         ushort itemId = reader.ReadUInt16();
                         byte itemAmount = reader.ReadByte();
 
-                        if (itemId != Configuration.Instance.ItemID)
+                        if (!Configuration.Instance.ItemID.Contains(itemId))
                         {
                             inventory.Add(new InventoryItem(itemId, itemAmount));
                             Logger.Log("Keeping item " + itemId);

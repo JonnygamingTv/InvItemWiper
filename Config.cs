@@ -11,7 +11,7 @@ namespace InvItemWiper
     {
         public bool enabled;
         public bool Events;
-        public ushort ItemID;
+        public List<ushort> ItemID;
         public string ServerName;
         public string LevelName;
 
@@ -19,7 +19,7 @@ namespace InvItemWiper
         {
             enabled = true;
             Events = true;
-            ItemID = 47580;
+            ItemID = new List<ushort> { 47580 };
             ServerName = "3";
             LevelName = "Retrovia";
         }
