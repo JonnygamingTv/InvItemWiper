@@ -17,7 +17,7 @@ namespace InvItemWiper
 
         public void LoadDefaults()
         {
-            enabled = true;
+            enabled = false;
             Events = true;
             ItemID = new List<ushort> { 47580 };
             ServerName = "3";
